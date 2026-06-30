@@ -1,26 +1,19 @@
-# Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
     "react-native/scripts/react_native_pods.rb",
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+platform :ios, '15.1'
 prepare_react_native_project!
-
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
 
 target 'ProximityApp' do
   config = use_native_modules!
 
   use_react_native!(
     :path => config[:reactNativePath],
-    # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :new_arch_enabled => true
   )
 
   post_install do |installer|
@@ -28,7 +21,42 @@ target 'ProximityApp' do
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
     )
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        # Force all pods to use iOS 15.1 minimum
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        
+        # Disable warnings as errors (this suppresses deprecation warnings)
+        config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+        config.build_settings['CLANG_WARN_DOCUMENTATION_COMMENTS'] = 'NO'
+        config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+        
+        # Force Swift 5 for all pods (avoids Swift 6 warnings)
+        config.build_settings['SWIFT_VERSION'] = '5.0'
+        
+        # Suppress Swift 6 concurrency warnings
+        config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] ||= '$(inherited)'
+        config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] << ' DISABLE_SWIFT_6_CONCURRENCY_CHECKS'
+      end
+      
+      # Specific fix for MapboxMaps
+      if target.name == "MapboxMaps"
+        target.build_configurations.each do |config|
+          config.build_settings['SWIFT_VERSION'] = '5.0'
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        end
+      end
+      
+      # Specific fix for react-native-safe-area-context
+      if target.name == "react-native-safe-area-context"
+        target.build_configurations.each do |config|
+          config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+          config.build_settings['HEADER_SEARCH_PATHS'] << '"${PODS_ROOT}/Headers/Public"'
+          config.build_settings['HEADER_SEARCH_PATHS'] << '"${PODS_ROOT}/Headers/Private"'
+        end
+      end
+    end
   end
 end

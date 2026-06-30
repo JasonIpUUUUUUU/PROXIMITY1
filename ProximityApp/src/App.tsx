@@ -139,7 +139,7 @@ const App: React.FC = () => {
   };
 
   const getUserOrCreate = async (): Promise<string> => {
-    let user = await db.loadUserData();
+    const user = await db.loadUserData();
     if (!user) {
       const userId = User.generateId();
       const newUser = new User({

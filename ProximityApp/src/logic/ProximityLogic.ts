@@ -6,12 +6,12 @@ type ProximityCallback = (placeId: number) => void;
 export class ProximityLogic {
   private locationService: typeof LocationService;
   private onProximityTrigger: ProximityCallback | null = null;
-  private placeCheckInterval: NodeJS.Timeout | null = null;
-  private isActive = false;
-  private radius = 80;
+  private placeCheckInterval: ReturnType<typeof setInterval> | null = null;
+  private isActive: boolean = false;
+  private radius: number = 80;
   private duration: number = 5 * 60 * 1000;
   private ratedPlaces: Set<number> = new Set();
-  private proximityTimers: Map<number, NodeJS.Timeout> = new Map();
+  private proximityTimers: Map<number, ReturnType<typeof setTimeout>> = new Map();
   private places: Place[] = [];
 
   constructor() {
