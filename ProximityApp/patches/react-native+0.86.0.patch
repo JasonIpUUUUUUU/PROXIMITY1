@@ -1,0 +1,33 @@
+diff --git a/node_modules/react-native/index.js b/node_modules/react-native/index.js
+index a4b7d5e..d21b6f1 100644
+--- a/node_modules/react-native/index.js
++++ b/node_modules/react-native/index.js
+@@ -24,7 +24,7 @@
+ // whenever updating React Native's public API.
+ // ----------------------------------------------------------------------------
+ 
+-import typeof * as ReactNativePublicAPI from './index.js.flow';
++// import typeof * as ReactNativePublicAPI from './index.js.flow';
+ 
+ const warnOnce = require('./Libraries/Utilities/warnOnce').default;
+ const invariant = require('invariant');
+@@ -362,8 +362,8 @@ module.exports = {
+   get UIManager() {
+     return require('./Libraries/ReactNative/UIManager').default;
+   },
+-  unstable_batchedUpdates<T>(fn: (bookkeeping: T) => void, bookkeeping: T) {
+-    fn(bookkeeping);
++  unstable_batchedUpdates(fn, bookkeeping) {
++  fn(bookkeeping);
+   },
+   get useAnimatedValue() {
+     return require('./Libraries/Animated/useAnimatedValue').default;
+@@ -394,7 +394,7 @@ module.exports = {
+       .VirtualViewMode;
+   },
+   // #endregion
+-} as ReactNativePublicAPI;
++};
+ 
+ if (__DEV__) {
+   /* $FlowFixMe[prop-missing] This is intentional: Flow will error when

@@ -2,6 +2,7 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 
 const config = {
   transformer: {
+    babelTransformerPath: require.resolve('./transformer.js'),
     getTransformOptions: async () => ({
       transform: {
         experimentalImportSupport: false,
