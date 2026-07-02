@@ -7,6 +7,10 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, '15.1'
 prepare_react_native_project!
 
+pre_install do |installer|
+  $RNMapboxMaps.pre_install(installer)
+end
+
 target 'ProximityApp' do
   config = use_native_modules!
 
@@ -22,6 +26,8 @@ target 'ProximityApp' do
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
     )
+
+    $RNMapboxMaps.post_install(installer)
 
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
@@ -39,14 +45,6 @@ target 'ProximityApp' do
         # Suppress Swift 6 concurrency warnings
         config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] ||= '$(inherited)'
         config.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS'] << ' DISABLE_SWIFT_6_CONCURRENCY_CHECKS'
-      end
-      
-      # Specific fix for MapboxMaps
-      if target.name == "MapboxMaps"
-        target.build_configurations.each do |config|
-          config.build_settings['SWIFT_VERSION'] = '5.0'
-          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
-        end
       end
       
       # Specific fix for react-native-safe-area-context

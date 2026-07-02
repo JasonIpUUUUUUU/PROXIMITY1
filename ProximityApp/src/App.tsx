@@ -38,8 +38,11 @@ const App: React.FC = () => {
   const filterLogic = useMemo(() => new FilterLogic(), []);
   const proximityLogic = useMemo(() => new ProximityLogic(), []);
 
+  // defines a function which calls when the app starts. useCallback ensures it is only called once. Async allows for time related functions like await to be defined
+
   const initializeApp = useCallback(async () => {
     try {
+      // first waits for the database to be initialized, then gets data
       await db.initialize();
       const loadedPlaces = await db.getAllPlaces();
       const userRatings = await db.getUserRatings();
@@ -54,7 +57,7 @@ const App: React.FC = () => {
       });
       setPlaces(loadedPlaces);
       setMarkedPlaces(marked);
-
+      
       const hasPermission = await locationService.requestPermissions();
       if (hasPermission) {
         locationService.startTracking();

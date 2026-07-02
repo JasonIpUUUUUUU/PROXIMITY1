@@ -1,10 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
+import MapboxGL from '@rnmapbox/maps';
 import { Place } from '../../models/Place';
 import MapService from '../../services/MapService';
-
-// Import Mapbox dynamically to avoid CommonJS/ESM issues
-let MapboxGL: any = null;
 
 interface ProximityMapProps {
   places: Place[];
@@ -23,77 +21,41 @@ const ProximityMap: React.FC<ProximityMapProps> = ({
   initialCenter = [-1.5358, 52.2919],
   initialZoom = 13.5,
 }) => {
-  const mapRef = useRef<any>(null);
-  const cameraRef = useRef<any>(null);
+  const mapRef = useRef<MapboxGL.MapView>(null);
+  const cameraRef = useRef<MapboxGL.Camera>(null);
   const [isMapReady, setIsMapReady] = useState(false);
-  const [isMapboxLoaded, setIsMapboxLoaded] = useState(false);
   const mapService = MapService;
 
-  // Load Mapbox dynamically
   useEffect(() => {
-    const loadMapbox = async () => {
-      try {
-        const module = await import('@rnmapbox/maps');
-        MapboxGL = module.default || module;
-        setIsMapboxLoaded(true);
-      } catch (error) {
-        console.error('Failed to load Mapbox:', error);
-      }
-    };
-    loadMapbox();
-  }, []);
-
-  useEffect(() => {
-    if (isMapboxLoaded) {
-      mapService.setMapRef(mapRef.current);
-      mapService.setCameraRef(cameraRef.current);
-    }
-  }, [isMapboxLoaded, mapService]);
+    mapService.setMapRef(mapRef.current);
+    mapService.setCameraRef(cameraRef.current);
+  }, [mapService]);
 
   const generateGeoJSON = useCallback(() => {
     return mapService.generateGeoJSON(places, highlightedIndex);
   }, [mapService, places, highlightedIndex]);
 
-  if (!isMapboxLoaded) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading map...</Text>
-        </View>
-      </View>
-    );
-  }
-
-  const { 
-    MapView: MapboxMapView, 
-    Camera, 
-    ShapeSource, 
-    CircleLayer, 
-    SymbolLayer, 
-    StyleURL 
-  } = MapboxGL;
-
   return (
     <View style={styles.container}>
-      <MapboxMapView
+      <MapboxGL.MapView
         ref={mapRef}
         style={styles.map}
-        styleURL={StyleURL.Dark}
+        styleURL={MapboxGL.StyleURL.Dark}
         onDidFinishLoadingMap={() => setIsMapReady(true)}
         logoEnabled={false}
         attributionEnabled={false}
       >
-        <Camera
+        <MapboxGL.Camera
           ref={cameraRef}
           zoomLevel={initialZoom}
           centerCoordinate={initialCenter}
         />
 
         {isMapReady && (
-          <ShapeSource
+          <MapboxGL.ShapeSource
             id="places-source"
             shape={generateGeoJSON()}
-            onPress={(event: any) => {
+            onPress={(event) => {
               const feature = event.features[0];
               if (feature) {
                 const placeIndex = feature.properties?.placeIndex;
@@ -103,7 +65,7 @@ const ProximityMap: React.FC<ProximityMapProps> = ({
               }
             }}
           >
-            <CircleLayer
+            <MapboxGL.CircleLayer
               id="place-bubbles"
               style={{
                 circleRadius: [
@@ -140,7 +102,7 @@ const ProximityMap: React.FC<ProximityMapProps> = ({
               }}
             />
 
-            <SymbolLayer
+            <MapboxGL.SymbolLayer
               id="place-labels"
               style={{
                 textField: [
@@ -163,9 +125,9 @@ const ProximityMap: React.FC<ProximityMapProps> = ({
                 textHaloWidth: 1,
               }}
             />
-          </ShapeSource>
+          </MapboxGL.ShapeSource>
         )}
-      </MapboxMapView>
+      </MapboxGL.MapView>
     </View>
   );
 };

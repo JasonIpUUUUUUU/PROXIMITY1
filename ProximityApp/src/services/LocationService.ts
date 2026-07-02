@@ -33,6 +33,7 @@ export class LocationService {
         interval: 5000,
         fastestInterval: 2000,
         showLocationDialog: true,
+        useSignificantChanges: false,
       }
     );
   }
@@ -107,7 +108,6 @@ export class LocationService {
         );
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } else {
-        // iOS - use the correct method name
         const result = await Geolocation.requestAuthorization('whenInUse');
         return result === 'granted';
       }
